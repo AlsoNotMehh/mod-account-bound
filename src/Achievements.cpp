@@ -164,7 +164,7 @@ std::vector<CharacterInfo> LoadAccountCharacters(uint32 accountId)
 
 void SyncAchievementToAccount(Player* player, uint32 achievementId, uint32 date)
 {
-    if (!Config.Enabled || !player)
+    if (!Config.Enabled || !player || AccountBound::IsExcludedAccount(player->GetSession()->GetAccountId()))
         return;
 
     uint8 const sourceRace = player->getRace(true);
@@ -195,7 +195,7 @@ void SyncAchievementToAccount(Player* player, uint32 achievementId, uint32 date)
 
 void BackfillAchievementsForCharacter(Player* player)
 {
-    if (!Config.Enabled || !player)
+    if (!Config.Enabled || !player || AccountBound::IsExcludedAccount(player->GetSession()->GetAccountId()))
         return;
 
     uint32 const accountId = player->GetSession()->GetAccountId();
@@ -262,7 +262,8 @@ void BackfillAllAchievements()
             fields[1].Get<uint32>(),
             fields[2].Get<uint8>()
         };
-        charactersByAccount[character.AccountId].push_back(character);
+        if (!AccountBound::IsExcludedAccount(character.AccountId))
+            charactersByAccount[character.AccountId].push_back(character);
     } while (charactersResult->NextRow());
 
     QueryResult achievementsResult = CharacterDatabase.Query(

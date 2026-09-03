@@ -414,7 +414,7 @@ std::vector<CharacterInfo> LoadAccountCharacters(uint32 accountId)
 
 void SyncMountToAccount(Player* player, uint32 spellId)
 {
-    if (!Config.Enabled || !player || !ShouldAccountSyncMount(spellId))
+    if (!Config.Enabled || !player || AccountBound::IsExcludedAccount(player->GetSession()->GetAccountId()) || !ShouldAccountSyncMount(spellId))
         return;
 
     uint8 const sourceRace = player->getRace(true);
@@ -445,7 +445,7 @@ void SyncMountToAccount(Player* player, uint32 spellId)
 
 void BackfillMountsForCharacter(Player* player)
 {
-    if (!Config.Enabled || !player)
+    if (!Config.Enabled || !player || AccountBound::IsExcludedAccount(player->GetSession()->GetAccountId()))
         return;
 
     uint32 const accountId = player->GetSession()->GetAccountId();
@@ -515,7 +515,8 @@ void BackfillAllMounts()
             fields[3].Get<uint8>(),
             fields[4].Get<uint16>()
         };
-        charactersByAccount[character.AccountId].push_back(character);
+        if (!AccountBound::IsExcludedAccount(character.AccountId))
+            charactersByAccount[character.AccountId].push_back(character);
     } while (charactersResult->NextRow());
 
     QueryResult spellsResult = CharacterDatabase.Query(

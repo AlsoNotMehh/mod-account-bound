@@ -223,7 +223,7 @@ void UpdateTitlesForCharacter(CharacterDatabaseTransaction& trans, uint32 target
 
 void BackfillTitlesForCharacter(Player* player)
 {
-    if (!Config.Enabled || !player)
+    if (!Config.Enabled || !player || AccountBound::IsExcludedAccount(player->GetSession()->GetAccountId()))
         return;
 
     uint32 const accountId = player->GetSession()->GetAccountId();
@@ -267,7 +267,7 @@ void BackfillTitlesForCharacter(Player* player)
 
 void SyncTitlesFromPlayerToAccount(Player* player)
 {
-    if (!Config.Enabled || !Config.SyncOnSave || !player)
+    if (!Config.Enabled || !Config.SyncOnSave || !player || AccountBound::IsExcludedAccount(player->GetSession()->GetAccountId()))
         return;
 
     uint32 const sourceGuid = player->GetGUID().GetCounter();
@@ -342,7 +342,11 @@ void BackfillAllTitles()
     do
     {
         Field* fields = result->Fetch();
-        charactersByAccount[fields[1].Get<uint32>()].push_back({
+        uint32 const accountId = fields[1].Get<uint32>();
+        if (AccountBound::IsExcludedAccount(accountId))
+            continue;
+
+        charactersByAccount[accountId].push_back({
             fields[0].Get<uint32>(),
             fields[2].Get<uint8>(),
             ParseKnownTitles(fields[3].Get<std::string>())

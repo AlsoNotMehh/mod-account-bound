@@ -1,3 +1,22 @@
+#include "AccountBound.h"
+#include "WorldScript.h"
+
+namespace
+{
+class AccountBoundConfigurationScript : public WorldScript
+{
+public:
+    AccountBoundConfigurationScript() : WorldScript("AccountBoundConfigurationScript", {
+        WORLDHOOK_ON_AFTER_CONFIG_LOAD
+    }) { }
+
+    void OnAfterConfigLoad(bool /*reload*/) override
+    {
+        AccountBound::ClearExcludedAccountCache();
+    }
+};
+}
+
 void AddAccountBoundAchievementsScripts();
 void AddAccountBoundMountsScripts();
 void AddAccountBoundPetsScripts();
@@ -8,6 +27,7 @@ void AddAccountWideFriendsScripts();
 
 void AddAccountBoundScripts()
 {
+    new AccountBoundConfigurationScript();
     AddAccountBoundAchievementsScripts();
     AddAccountBoundMountsScripts();
     AddAccountBoundPetsScripts();

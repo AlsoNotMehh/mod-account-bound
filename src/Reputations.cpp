@@ -248,7 +248,7 @@ uint32 MergeReputations(CharacterInfo const& source, CharacterInfo& target, Char
 
 void BackfillReputationsForCharacter(Player* player)
 {
-    if (!Config.Enabled || !player)
+    if (!Config.Enabled || !player || AccountBound::IsExcludedAccount(player->GetSession()->GetAccountId()))
         return;
 
     std::vector<CharacterInfo> characters = LoadCharacters(player->GetSession()->GetAccountId());
@@ -275,7 +275,7 @@ void BackfillReputationsForCharacter(Player* player)
 
 void SyncReputationToAccount(Player* player, uint32 factionId, int32 absoluteStanding)
 {
-    if (!Config.Enabled || !Config.SyncOnChange || !player)
+    if (!Config.Enabled || !Config.SyncOnChange || !player || AccountBound::IsExcludedAccount(player->GetSession()->GetAccountId()))
         return;
 
     FactionEntry const* sourceFaction = sFactionStore.LookupEntry(factionId);
@@ -332,7 +332,8 @@ void BackfillAllReputations()
 
     for (auto const& [accountId, indexes] : charactersByAccount)
     {
-        (void)accountId;
+        if (AccountBound::IsExcludedAccount(accountId))
+            continue;
         std::vector<CharacterInfo> const snapshot = [&]()
         {
             std::vector<CharacterInfo> result;

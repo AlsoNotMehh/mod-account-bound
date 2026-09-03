@@ -42,6 +42,7 @@ Instead of executing runtime `learnSpell()` calls or re-broadcasting achievement
 | Setting | Default | Description |
 | :--- | :---: | :--- |
 | `AccountBound.Enable` | `1` | Master switch for all account-bound synchronization. |
+| `AccountBound.ExcludedAccountNamePrefix` | `RND` | Account name prefix to exclude from synchronization (e.g. Playerbot random bots). |
 | `AccountBound.Achievements.Enable` | `1` | Enables account-wide achievement synchronization. |
 | `AccountBound.Achievements.ConvertFactionSpecific` | `1` | Converts faction-specific achievements across alts. |
 | `AccountBound.Mounts.Enable` | `1` | Enables account-wide mount sharing. |
@@ -80,3 +81,4 @@ If you find this module helpful for your server, please consider giving it a sta
 ## 📜 License
 
 This project is licensed under the [GPL-3.0 License](LICENSE).
+

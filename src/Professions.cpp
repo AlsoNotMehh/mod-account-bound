@@ -494,7 +494,7 @@ uint32 CountPrimaryProfessions(Player const* player)
 
 void NormalizeFreeProfessionPoints(Player* player)
 {
-    if (!Config.Enabled || !player)
+    if (!Config.Enabled || !player || AccountBound::IsExcludedAccount(player->GetSession()->GetAccountId()))
         return;
 
     uint32 const maxPrimaryProfessions = GetConfiguredMaxPrimaryProfessions();
@@ -507,7 +507,8 @@ void NormalizeFreeProfessionPoints(Player* player)
 
 void EnforceAllowedProfessions(Player* player)
 {
-    if (!Config.Enabled || !Config.EnforceAllowedPrimaryProfessions || !player)
+    if (!Config.Enabled || !Config.EnforceAllowedPrimaryProfessions || !player ||
+        AccountBound::IsExcludedAccount(player->GetSession()->GetAccountId()))
         return;
 
     for (ProfessionDefinition const& profession : PrimaryProfessionDefinitions)
@@ -752,7 +753,8 @@ bool StoreSkillSnapshotForCharacter(CharacterDatabaseTransaction& trans, Charact
 
 void BackfillProfessionsForCharacter(Player* player)
 {
-    if (!Config.Enabled || !Config.AccountBoundEnabled || !player)
+    if (!Config.Enabled || !Config.AccountBoundEnabled || !player ||
+        AccountBound::IsExcludedAccount(player->GetSession()->GetAccountId()))
         return;
 
     CharacterInfo const target{ player->GetGUID().GetCounter(), player->GetSession()->GetAccountId(), player->getRace(true), player->getClass() };
@@ -803,7 +805,8 @@ void BackfillProfessionsForCharacter(Player* player)
 
 void SyncSkillToAccount(Player* player, uint32 skillId)
 {
-    if (!Config.Enabled || !Config.AccountBoundEnabled || !Config.AccountBoundSyncOnLearn || !Config.AccountBoundSyncSkillProgress || !player)
+    if (!Config.Enabled || !Config.AccountBoundEnabled || !Config.AccountBoundSyncOnLearn || !Config.AccountBoundSyncSkillProgress || !player ||
+        AccountBound::IsExcludedAccount(player->GetSession()->GetAccountId()))
         return;
 
     if (!IsManagedProfessionSkill(skillId))
@@ -849,7 +852,8 @@ void SyncSkillToAccount(Player* player, uint32 skillId)
 
 void SyncSpellToAccount(Player* player, uint32 spellId)
 {
-    if (!Config.Enabled || !Config.AccountBoundEnabled || !Config.AccountBoundSyncOnLearn || !player)
+    if (!Config.Enabled || !Config.AccountBoundEnabled || !Config.AccountBoundSyncOnLearn || !player ||
+        AccountBound::IsExcludedAccount(player->GetSession()->GetAccountId()))
         return;
 
     if (!IsAccountBoundProfessionSpell(spellId))
@@ -897,7 +901,8 @@ std::unordered_map<uint32, std::vector<CharacterInfo>> LoadAllCharactersByAccoun
     {
         Field* fields = result->Fetch();
         CharacterInfo character{ fields[0].Get<uint32>(), fields[1].Get<uint32>(), fields[2].Get<uint8>(), fields[3].Get<uint8>() };
-        charactersByAccount[character.AccountId].push_back(character);
+        if (!AccountBound::IsExcludedAccount(character.AccountId))
+            charactersByAccount[character.AccountId].push_back(character);
     } while (result->NextRow());
 
     return charactersByAccount;

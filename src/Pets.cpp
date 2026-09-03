@@ -150,7 +150,7 @@ std::vector<CharacterInfo> LoadAccountCharacters(uint32 accountId)
 
 void SyncCompanionToAccount(Player* player, uint32 spellId)
 {
-    if (!Config.Enabled || !player || !IsCompanionSpell(spellId))
+    if (!Config.Enabled || !player || AccountBound::IsExcludedAccount(player->GetSession()->GetAccountId()) || !IsCompanionSpell(spellId))
         return;
 
     uint32 const sourceGuid = player->GetGUID().GetCounter();
@@ -178,7 +178,7 @@ void SyncCompanionToAccount(Player* player, uint32 spellId)
 
 void SeedCompanionsForCharacter(Player* player)
 {
-    if (!Config.Enabled || !player)
+    if (!Config.Enabled || !player || AccountBound::IsExcludedAccount(player->GetSession()->GetAccountId()))
         return;
 
     uint32 const accountId = player->GetSession()->GetAccountId();
@@ -233,7 +233,11 @@ void BackfillAllCompanions()
     do
     {
         Field* fields = charactersResult->Fetch();
-        charactersByAccount[fields[1].Get<uint32>()].push_back({
+        uint32 const accountId = fields[1].Get<uint32>();
+        if (AccountBound::IsExcludedAccount(accountId))
+            continue;
+
+        charactersByAccount[accountId].push_back({
             fields[0].Get<uint32>(),
             fields[2].Get<uint8>()
         });

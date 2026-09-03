@@ -266,6 +266,9 @@ void RemoveOwnAccountFriends(uint32 accountId)
 
 uint32 SyncAccountFriends(uint32 accountId)
 {
+    if (AccountBound::IsExcludedAccount(accountId))
+        return 0;
+
     RemoveOwnAccountFriends(accountId);
     RemoveInvalidFactionFriends(accountId);
 

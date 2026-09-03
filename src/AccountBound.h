@@ -2,16 +2,56 @@
 #define ACCOUNT_BOUND_H
 
 #include "Config.h"
+#include "DatabaseEnv.h"
 #include "Log.h"
+#include "QueryResult.h"
 
 #include <charconv>
 #include <cctype>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <unordered_set>
 
 namespace AccountBound
 {
+inline std::unordered_map<uint32, bool> ExcludedAccountCache;
+
+inline void ClearExcludedAccountCache()
+{
+    ExcludedAccountCache.clear();
+}
+
+inline bool HasPrefixIgnoreCase(std::string_view value, std::string_view prefix)
+{
+    if (value.size() < prefix.size())
+        return false;
+
+    for (std::size_t index = 0; index < prefix.size(); ++index)
+        if (std::toupper(static_cast<unsigned char>(value[index])) !=
+            std::toupper(static_cast<unsigned char>(prefix[index])))
+            return false;
+
+    return true;
+}
+
+inline bool IsExcludedAccount(uint32 accountId)
+{
+    std::string const excludedAccountPrefix = sConfigMgr->GetOption<std::string>(
+        "AccountBound.ExcludedAccountNamePrefix", "RND");
+    if (!accountId || excludedAccountPrefix.empty())
+        return false;
+
+    if (auto const itr = ExcludedAccountCache.find(accountId); itr != ExcludedAccountCache.end())
+        return itr->second;
+
+    QueryResult const result = LoginDatabase.Query("SELECT username FROM account WHERE id = {}", accountId);
+    bool const isExcluded = result &&
+        HasPrefixIgnoreCase(result->Fetch()[0].Get<std::string>(), excludedAccountPrefix);
+    ExcludedAccountCache.emplace(accountId, isExcluded);
+    return isExcluded;
+}
+
 struct IdFilter
 {
     bool AllowAll = true;

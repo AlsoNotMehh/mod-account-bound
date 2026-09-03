@@ -6,6 +6,11 @@
 # Master switch for every category below.
 AccountBound.Enable = 1
 
+# Skip every AccountBound feature for accounts whose usernames begin with this prefix.
+# The default RND excludes Playerbot random-bot accounts. Leave empty to disable.
+# like this AccountBound.ExcludedAccountNamePrefix =  #So even Playerbot will sync
+AccountBound.ExcludedAccountNamePrefix = RND
+
 #
 # Achievements
 #
