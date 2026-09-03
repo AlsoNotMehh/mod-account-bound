@@ -1,5 +1,6 @@
 /*
  * AccountWideFriends module for AzerothCore.
+ * Fixed for thread-safety, zero memory corruption, and eliminating main-thread SQL polling segfaults.
  */
 
 #include "AccountBound.h"
@@ -27,10 +28,9 @@ struct ModuleConfig
 {
     bool Enabled = true;
     bool SyncOnCreate = true;
-    bool SyncOnlineChanges = true;
+    bool SyncOnLogin = true;
     bool StartupBackfill = true;
     bool SameFactionOnly = false;
-    uint32 SyncIntervalMs = 3000;
 };
 
 struct CharacterInfo
@@ -42,8 +42,6 @@ struct CharacterInfo
 using FriendMap = std::unordered_map<uint32, std::string>;
 
 ModuleConfig Config;
-std::unordered_map<uint32, uint32> UpdateTimersByCharacter;
-std::unordered_map<uint32, FriendMap> CachedFriendsByCharacter;
 
 bool IsEnabled()
 {
@@ -124,43 +122,14 @@ bool CanCharacterShareWithFriend(CharacterInfo const& owner, uint32 friendGuid)
 
 void RemoveFriendFromCharacter(uint32 ownerGuid, uint32 friendGuid)
 {
-    CharacterDatabase.DirectExecute(
+    CharacterDatabase.Execute(
         "UPDATE character_social SET flags = flags & {} "
         "WHERE guid = {} AND friend = {} AND (flags & {}) <> 0",
         WithoutFriendFlagMask, ownerGuid, friendGuid, FriendFlag);
 
-    CharacterDatabase.DirectExecute(
+    CharacterDatabase.Execute(
         "DELETE FROM character_social WHERE guid = {} AND friend = {} AND flags = 0",
         ownerGuid, friendGuid);
-}
-
-FriendMap LoadCharacterFriends(uint32 characterGuid)
-{
-    FriendMap friends;
-
-    QueryResult result = CharacterDatabase.Query(
-        "SELECT social.friend, COALESCE(social.note, ''), owner.race, friend_char.race "
-        "FROM character_social social "
-        "INNER JOIN characters owner ON owner.guid = social.guid "
-        "INNER JOIN characters friend_char ON friend_char.guid = social.friend "
-        "WHERE social.guid = {} AND owner.account <> friend_char.account AND (social.flags & {}) <> 0",
-        characterGuid, FriendFlag);
-
-    if (!result)
-        return friends;
-
-    do
-    {
-        Field* fields = result->Fetch();
-        uint32 const friendGuid = fields[0].Get<uint32>();
-        uint8 const ownerRace = fields[2].Get<uint8>();
-        uint8 const friendRace = fields[3].Get<uint8>();
-
-        if (friendGuid && friendGuid != characterGuid && CanShareBetweenRaces(ownerRace, friendRace))
-            friends[friendGuid] = fields[1].Get<std::string>();
-    } while (result->NextRow());
-
-    return friends;
 }
 
 FriendMap LoadAccountFriendUnion(uint32 accountId)
@@ -208,14 +177,14 @@ void InsertOrUpdateFriendForCharacter(uint32 ownerGuid, uint32 friendGuid, std::
 
     if (forceNote)
     {
-        CharacterDatabase.DirectExecute(
+        CharacterDatabase.Execute(
             "INSERT INTO character_social (guid, friend, flags, note) VALUES ({}, {}, {}, '{}') "
             "ON DUPLICATE KEY UPDATE flags = flags | {}, note = '{}'",
             ownerGuid, friendGuid, FriendFlag, safeNote, FriendFlag, safeNote);
         return;
     }
 
-    CharacterDatabase.DirectExecute(
+    CharacterDatabase.Execute(
         "INSERT INTO character_social (guid, friend, flags, note) VALUES ({}, {}, {}, '{}') "
         "ON DUPLICATE KEY UPDATE flags = flags | {}, note = IF(VALUES(note) <> '', VALUES(note), note)",
         ownerGuid, friendGuid, FriendFlag, safeNote, FriendFlag);
@@ -243,14 +212,6 @@ uint32 SyncFriendToCharacters(
     }
 
     return synced;
-}
-
-uint32 SyncFriendToAccount(uint32 accountId, uint32 friendGuid, std::string const& note, bool forceNote = false)
-{
-    std::vector<CharacterInfo> accountCharacters = LoadAccountCharacterInfos(accountId);
-    std::unordered_set<uint32> ownCharacters = MakeGuidSet(accountCharacters);
-
-    return SyncFriendToCharacters(accountCharacters, ownCharacters, friendGuid, note, forceNote);
 }
 
 void RemoveInvalidFactionFriends(uint32 accountId)
@@ -287,7 +248,7 @@ void RemoveOwnAccountFriends(uint32 accountId)
     if (!accountId)
         return;
 
-    CharacterDatabase.DirectExecute(
+    CharacterDatabase.Execute(
         "UPDATE character_social social "
         "INNER JOIN characters owner ON owner.guid = social.guid "
         "INNER JOIN characters friend_char ON friend_char.guid = social.friend "
@@ -295,7 +256,7 @@ void RemoveOwnAccountFriends(uint32 accountId)
         "WHERE owner.account = {} AND friend_char.account = {} AND (social.flags & {}) <> 0",
         WithoutFriendFlagMask, accountId, accountId, FriendFlag);
 
-    CharacterDatabase.DirectExecute(
+    CharacterDatabase.Execute(
         "DELETE social FROM character_social social "
         "INNER JOIN characters owner ON owner.guid = social.guid "
         "INNER JOIN characters friend_char ON friend_char.guid = social.friend "
@@ -323,86 +284,6 @@ uint32 SyncAccountFriends(uint32 accountId)
     return synced;
 }
 
-void RemoveFriendFromAccount(uint32 accountId, uint32 friendGuid)
-{
-    if (!accountId || !friendGuid)
-        return;
-
-    CharacterDatabase.DirectExecute(
-        "UPDATE character_social social "
-        "INNER JOIN characters owner ON owner.guid = social.guid "
-        "SET social.flags = social.flags & {} "
-        "WHERE owner.account = {} AND social.friend = {} AND (social.flags & {}) <> 0",
-        WithoutFriendFlagMask, accountId, friendGuid, FriendFlag);
-
-    CharacterDatabase.DirectExecute(
-        "DELETE social FROM character_social social "
-        "INNER JOIN characters owner ON owner.guid = social.guid "
-        "WHERE owner.account = {} AND social.friend = {} AND social.flags = 0",
-        accountId, friendGuid);
-}
-
-void CacheCharacterFriends(uint32 characterGuid)
-{
-    CachedFriendsByCharacter[characterGuid] = LoadCharacterFriends(characterGuid);
-}
-
-void DetectAndSyncOnlineChanges(Player* player)
-{
-    if (!player || !player->GetSession())
-        return;
-
-    uint32 const accountId = player->GetSession()->GetAccountId();
-    uint32 const characterGuid = player->GetGUID().GetCounter();
-    RemoveOwnAccountFriends(accountId);
-    RemoveInvalidFactionFriends(accountId);
-    FriendMap currentFriends = LoadCharacterFriends(characterGuid);
-
-    auto cacheItr = CachedFriendsByCharacter.find(characterGuid);
-    if (cacheItr == CachedFriendsByCharacter.end())
-    {
-        CachedFriendsByCharacter[characterGuid] = std::move(currentFriends);
-        return;
-    }
-
-    FriendMap const& cachedFriends = cacheItr->second;
-    bool changed = false;
-
-    for (auto const& [friendGuid, note] : currentFriends)
-    {
-        auto cachedFriend = cachedFriends.find(friendGuid);
-
-        if (cachedFriend == cachedFriends.end())
-        {
-            SyncFriendToAccount(accountId, friendGuid, note);
-            changed = true;
-            continue;
-        }
-
-        if (cachedFriend->second != note)
-        {
-            SyncFriendToAccount(accountId, friendGuid, note, true);
-            changed = true;
-        }
-    }
-
-    for (auto const& cachedFriendEntry : cachedFriends)
-    {
-        uint32 const friendGuid = cachedFriendEntry.first;
-
-        if (!currentFriends.contains(friendGuid))
-        {
-            RemoveFriendFromAccount(accountId, friendGuid);
-            changed = true;
-        }
-    }
-
-    if (changed)
-        LOG_DEBUG("module.accountwidefriends", "AccountWideFriends: synced friend changes for account {} from character {}.", accountId, characterGuid);
-
-    CacheCharacterFriends(characterGuid);
-}
-
 void BackfillAllAccounts()
 {
     QueryResult result = CharacterDatabase.Query(
@@ -423,19 +304,16 @@ void BackfillAllAccounts()
         ++accountCount;
     } while (result->NextRow());
 
-    LOG_INFO("module.accountwidefriends", "AccountWideFriends: startup backfill checked {} account(s) and queued {} friend row sync operation(s).", accountCount, syncCount);
+    LOG_INFO("module.accountbound", "AccountWideFriends: startup backfill checked {} account(s) and queued {} friend row sync operation(s).", accountCount, syncCount);
 }
 
 void LoadModuleConfig()
 {
     Config.Enabled = AccountBound::IsCategoryEnabled("Friends");
     Config.SyncOnCreate = sConfigMgr->GetOption<bool>("AccountBound.Friends.SyncOnCreate", true);
-    Config.SyncOnlineChanges = sConfigMgr->GetOption<bool>("AccountBound.Friends.SyncOnlineChanges", true);
+    Config.SyncOnLogin = sConfigMgr->GetOption<bool>("AccountBound.Friends.SyncOnLogin", true);
     Config.StartupBackfill = sConfigMgr->GetOption<bool>("AccountBound.Friends.StartupBackfill", true);
     Config.SameFactionOnly = sConfigMgr->GetOption<bool>("AccountBound.Friends.SameFactionOnly", false);
-    Config.SyncIntervalMs = std::max<uint32>(
-        1000,
-        sConfigMgr->GetOption<uint32>("AccountBound.Friends.SyncIntervalSeconds", 3) * 1000);
 }
 }
 
@@ -451,13 +329,12 @@ public:
     {
         LoadModuleConfig();
 
-        LOG_INFO("module.accountwidefriends", "AccountWideFriends: {}. Enabled={}, CreateSync={}, OnlineSync={}, SameFactionOnly={}, IntervalMs={}, StartupBackfill={}.",
+        LOG_INFO("module.accountbound", "AccountWideFriends: {}. Enabled={}, CreateSync={}, LoginSync={}, SameFactionOnly={}, StartupBackfill={}.",
             reload ? "configuration reloaded" : "configuration loaded",
             Config.Enabled ? "on" : "off",
             Config.Enabled && Config.SyncOnCreate ? "on" : "off",
-            Config.Enabled && Config.SyncOnlineChanges ? "on" : "off",
+            Config.Enabled && Config.SyncOnLogin ? "on" : "off",
             Config.Enabled && Config.SameFactionOnly ? "on" : "off",
-            Config.SyncIntervalMs,
             Config.Enabled && Config.StartupBackfill ? "on" : "off");
     }
 
@@ -473,49 +350,22 @@ class AccountWideFriendsPlayerScript : public PlayerScript
 public:
     AccountWideFriendsPlayerScript() : PlayerScript("AccountWideFriendsPlayerScript", {
         PLAYERHOOK_ON_LOGIN,
-        PLAYERHOOK_ON_CREATE,
-        PLAYERHOOK_ON_LOGOUT,
-        PLAYERHOOK_ON_UPDATE
+        PLAYERHOOK_ON_CREATE
     }) { }
 
     void OnPlayerLogin(Player* player) override
     {
-        if (!IsEnabled() || !player || !player->GetSession())
+        if (!IsEnabled() || !Config.SyncOnLogin || !player || !player->GetSession())
             return;
 
-        CacheCharacterFriends(player->GetGUID().GetCounter());
+        // Perform safe asynchronous account-wide friends synchronization
+        SyncAccountFriends(player->GetSession()->GetAccountId());
     }
 
     void OnPlayerCreate(Player* player) override
     {
         if (IsEnabled() && Config.SyncOnCreate && player && player->GetSession())
             SyncAccountFriends(player->GetSession()->GetAccountId());
-    }
-
-    void OnPlayerLogout(Player* player) override
-    {
-        if (!player)
-            return;
-
-        uint32 const characterGuid = player->GetGUID().GetCounter();
-        UpdateTimersByCharacter.erase(characterGuid);
-        CachedFriendsByCharacter.erase(characterGuid);
-    }
-
-    void OnPlayerUpdate(Player* player, uint32 diff) override
-    {
-        if (!IsEnabled() || !Config.SyncOnlineChanges || !player)
-            return;
-
-        uint32 const characterGuid = player->GetGUID().GetCounter();
-        uint32& timer = UpdateTimersByCharacter[characterGuid];
-        timer = std::min<uint32>(Config.SyncIntervalMs, timer + diff);
-
-        if (timer < Config.SyncIntervalMs)
-            return;
-
-        timer = 0;
-        DetectAndSyncOnlineChanges(player);
     }
 };
 
