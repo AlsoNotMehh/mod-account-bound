@@ -1,4 +1,4 @@
-# ![logo](https://raw.githubusercontent.com/azerothcore/azerothcore.github.io/master/images/logo-github.png) AzerothCore Module: AccountBound
+# ![logo](https://raw.githubusercontent.com/azerothcore/azerothcore.github.io/master/images/logo-github.png) AzerothCore Module: mod-account-bound
 
 [![AzerothCore Module](https://img.shields.io/badge/AzerothCore-Module-red?style=flat-square&logo=github)](https://github.com/azerothcore/azerothcore-wotlk)
 [![C++20](https://img.shields.io/badge/Language-C++20-00599C?style=flat-square&logo=c%2B%2B)](https://isocpp.org/)
@@ -65,7 +65,7 @@ Instead of executing runtime `learnSpell()` calls or re-broadcasting achievement
 1. Place the module in `azerothcore-wotlk/modules/`:
    ```bash
    cd azerothcore-wotlk/modules
-   git clone https://github.com/AlsoNotMehh/AccountBound.git
+   git clone https://github.com/AlsoNotMehh/mod-account-bound.git
    ```
 2. Re-run CMake and compile your server:
    ```bash
