@@ -16,3 +16,8 @@ void AddAccountBoundScripts()
     AddAccountBoundTitlesScripts();
     AddAccountWideFriendsScripts();
 }
+
+void Addmod_account_boundScripts()
+{
+    AddAccountBoundScripts();
+}
