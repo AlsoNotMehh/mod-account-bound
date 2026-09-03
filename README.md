@@ -11,6 +11,7 @@ A unified, high-performance account-wide progression system for **AzerothCore (W
 Vanilla WotLK isolates every unlock to a single character. Players often hesitate to level alts because grinding the same reputations, achievements, rare mount drops, and titles repeatedly feels like a chore. Other account-wide modules suffer from massive login chat spam, achievement audio playback, or custom database dependencies.
 
 **`AccountBound`** consolidates all account-wide systems into a single module using silent direct database synchronization, ensuring zero login lag, zero audio spam, and automatic faction conversions for cross-faction alts.
+
 ## 📊 Feature Comparison
 
 | Feature | Stock AzerothCore | AccountBound |
@@ -22,6 +23,7 @@ Vanilla WotLK isolates every unlock to a single character. Players often hesitat
 | **Account-Wide Friend Lists** | ❌ Per-character only | ✅ **Shared friends and notes across all characters on the account** |
 | **Login Experience** | ⚠️ Chat spam / achievement popups | ✅ **Silent sync directly to core tables without popup spam** |
 | **Database Requirements** | ❌ Requires custom tables in other mods | ✅ **Zero custom SQL tables; writes directly to core tables** |
+
 ## ⚙️ Technical Architecture
 
 ### 1. Silent Direct Table Synchronization
@@ -34,6 +36,7 @@ Instead of executing runtime `learnSpell()` calls or re-broadcasting achievement
 - **Mount Requirements:** Mount spells are only activated on alts that meet the required riding skill level (`RequireRiding = 1`). If an alt levels up Riding, missing mounts backfill automatically.
 - **Faction Mapping:** Faction-specific mounts (e.g. Wolf $leftrightarrow$ Horse) and titles (e.g. *of the Horde* $leftrightarrow$ *of the Alliance*) convert automatically when logging into opposite-faction alts.
 - **Reputation Upward Merge:** Standings only move upward; a lower-reputation alt will never overwrite a character with Exalted status.
+
 ## 📋 Configuration Reference (`AccountBound.conf`)
 
 | Setting | Default | Description |
@@ -48,6 +51,7 @@ Instead of executing runtime `learnSpell()` calls or re-broadcasting achievement
 | `AccountBound.Reputations.Enable` | `1` | Enables account-wide reputation standings (highest rank). |
 | `AccountBound.Professions.Enable` | `0` | Optional account-wide profession ranks and recipe sync. |
 | `AccountBound.Friends.Enable` | `1` | Enables account-wide friend lists and personal notes. |
+
 ## 🛠️ Installation
 
 1. Place the module in `azerothcore-wotlk/modules/`:
@@ -55,12 +59,15 @@ Instead of executing runtime `learnSpell()` calls or re-broadcasting achievement
    cd azerothcore-wotlk/modules
    git clone https://github.com/AlsoNotMehh/mod-account-bound.git
    ```
+
 2. Re-run CMake and compile your server:
    ```bash
    cmake -B build
    cmake --build build --config Release
    ```
+
 3. Copy `conf/AccountBound.conf.dist` to your `worldserver` configs directory as `AccountBound.conf` and customize as needed.
+
 ## ⭐ Show your support
 
 If you find this module helpful for your server, please consider giving it a star on GitHub! It helps more developers in the AzerothCore community discover the project.
@@ -69,6 +76,7 @@ If you find this module helpful for your server, please consider giving it a sta
 
 - **Author & Enhancements:** [AlsoNotMehh](https://github.com/AlsoNotMehh) ([Discord](https://discord.com/users/1063304041419001966) / [Email](mailto:itsbrayanrodriguez@gmail.com))
 - **Framework:** [AzerothCore](https://www.azerothcore.org)
+
 ## 📜 License
 
 This project is licensed under the [GPL-3.0 License](LICENSE).
