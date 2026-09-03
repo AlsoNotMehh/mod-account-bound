@@ -10,7 +10,7 @@ A unified, high-performance account-wide progression system for **AzerothCore (W
 ### 💡 Why this module?
 Vanilla WotLK isolates every unlock to a single character. Players often hesitate to level alts because grinding the same reputations, achievements, rare mount drops, and titles repeatedly feels like a chore. Other account-wide modules suffer from massive login chat spam, achievement audio playback, or custom database dependencies.
 
-**`AccountBound`** consolidates all account-wide systems into a single module using silent direct database synchronization—ensuring zero login lag, zero audio spam, and automatic faction conversions for cross-faction alts.
+**`AccountBound`** consolidates all account-wide systems into a single module using silent direct database synchronization, ensuring zero login lag, zero audio spam, and automatic faction conversions for cross-faction alts.
 ## 📊 Feature Comparison
 
 | Feature | Stock AzerothCore | AccountBound |
