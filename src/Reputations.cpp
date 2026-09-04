@@ -356,12 +356,12 @@ void BackfillAllReputations()
 void LoadModuleConfig()
 {
     Config.Enabled = AccountBound::IsCategoryEnabled("Reputations");
-    Config.StartupBackfill = sConfigMgr->GetOption<bool>("AccountBound.Reputations.StartupBackfill", true);
-    Config.SyncOnCreate = sConfigMgr->GetOption<bool>("AccountBound.Reputations.SyncOnCreate", true);
-    Config.SyncOnChange = sConfigMgr->GetOption<bool>("AccountBound.Reputations.SyncOnChange", true);
-    Config.SameFactionOnly = sConfigMgr->GetOption<bool>("AccountBound.Reputations.SameFactionOnly", true);
-    Config.ConvertFactionSpecific = sConfigMgr->GetOption<bool>("AccountBound.Reputations.ConvertFactionSpecific", true);
-    Config.SyncUnpairedCrossFaction = sConfigMgr->GetOption<bool>("AccountBound.Reputations.SyncUnpairedCrossFaction", false);
+    Config.StartupBackfill = sConfigMgr->GetOption<bool>("AccountBound.Reputations.StartupBackfill", true, false);
+    Config.SyncOnCreate = sConfigMgr->GetOption<bool>("AccountBound.Reputations.SyncOnCreate", true, false);
+    Config.SyncOnChange = sConfigMgr->GetOption<bool>("AccountBound.Reputations.SyncOnChange", true, false);
+    Config.SameFactionOnly = sConfigMgr->GetOption<bool>("AccountBound.Reputations.SameFactionOnly", true, false);
+    Config.ConvertFactionSpecific = sConfigMgr->GetOption<bool>("AccountBound.Reputations.ConvertFactionSpecific", true, false);
+    Config.SyncUnpairedCrossFaction = sConfigMgr->GetOption<bool>("AccountBound.Reputations.SyncUnpairedCrossFaction", false, false);
     Config.Filter = AccountBound::LoadIdFilter("Reputations");
 }
 }

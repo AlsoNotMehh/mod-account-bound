@@ -287,11 +287,11 @@ void BackfillAllCompanions()
 void LoadModuleConfig()
 {
     Config.Enabled = AccountBound::IsCategoryEnabled("Pets");
-    Config.StartupBackfill = sConfigMgr->GetOption<bool>("AccountBound.Pets.StartupBackfill", true);
-    Config.SyncOnCreate = sConfigMgr->GetOption<bool>("AccountBound.Pets.SyncOnCreate", true);
-    Config.SameFactionOnly = sConfigMgr->GetOption<bool>("AccountBound.Pets.SameFactionOnly", false);
-    Config.IncludeCompanionSkillLine = sConfigMgr->GetOption<bool>("AccountBound.Pets.IncludeCompanionSkillLine", true);
-    Config.IncludeMinipetSummons = sConfigMgr->GetOption<bool>("AccountBound.Pets.IncludeMinipetSummons", true);
+    Config.StartupBackfill = sConfigMgr->GetOption<bool>("AccountBound.Pets.StartupBackfill", true, false);
+    Config.SyncOnCreate = sConfigMgr->GetOption<bool>("AccountBound.Pets.SyncOnCreate", true, false);
+    Config.SameFactionOnly = sConfigMgr->GetOption<bool>("AccountBound.Pets.SameFactionOnly", false, false);
+    Config.IncludeCompanionSkillLine = sConfigMgr->GetOption<bool>("AccountBound.Pets.IncludeCompanionSkillLine", true, false);
+    Config.IncludeMinipetSummons = sConfigMgr->GetOption<bool>("AccountBound.Pets.IncludeMinipetSummons", true, false);
     Config.Filter = AccountBound::LoadIdFilter("Pets");
 }
 }

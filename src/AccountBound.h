@@ -38,7 +38,7 @@ inline bool HasPrefixIgnoreCase(std::string_view value, std::string_view prefix)
 inline bool IsExcludedAccount(uint32 accountId)
 {
     std::string const excludedAccountPrefix = sConfigMgr->GetOption<std::string>(
-        "AccountBound.ExcludedAccountNamePrefix", "RND");
+        "AccountBound.ExcludedAccountNamePrefix", "RND", false);
     if (!accountId || excludedAccountPrefix.empty())
         return false;
 
@@ -106,18 +106,18 @@ inline void ParseIds(std::string const& raw, std::unordered_set<uint32>& destina
 
 inline bool IsCategoryEnabled(std::string_view category, bool defaultValue = true)
 {
-    if (!sConfigMgr->GetOption<bool>("AccountBound.Enable", true))
+    if (!sConfigMgr->GetOption<bool>("AccountBound.Enable", true, false))
         return false;
 
     return sConfigMgr->GetOption<bool>(
-        "AccountBound." + std::string(category) + ".Enable", defaultValue);
+        "AccountBound." + std::string(category) + ".Enable", defaultValue, false);
 }
 
 inline IdFilter LoadIdFilter(std::string_view category)
 {
     IdFilter filter;
     std::string const prefix = "AccountBound." + std::string(category);
-    std::string const allowList = Trim(sConfigMgr->GetOption<std::string>(prefix + ".AllowList", "all"));
+    std::string const allowList = Trim(sConfigMgr->GetOption<std::string>(prefix + ".AllowList", "all", false));
 
     if (!allowList.empty() && allowList != "all" && allowList != "ALL" && allowList != "*")
     {
@@ -126,7 +126,7 @@ inline IdFilter LoadIdFilter(std::string_view category)
             ParseIds(allowList, filter.Allowed);
     }
 
-    ParseIds(sConfigMgr->GetOption<std::string>(prefix + ".BlockList", ""), filter.Blocked);
+    ParseIds(sConfigMgr->GetOption<std::string>(prefix + ".BlockList", "", false), filter.Blocked);
     return filter;
 }
 }

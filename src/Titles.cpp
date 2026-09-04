@@ -390,11 +390,11 @@ void BackfillAllTitles()
 void LoadModuleConfig()
 {
     Config.Enabled = AccountBound::IsCategoryEnabled("Titles");
-    Config.StartupBackfill = sConfigMgr->GetOption<bool>("AccountBound.Titles.StartupBackfill", true);
-    Config.SyncOnCreate = sConfigMgr->GetOption<bool>("AccountBound.Titles.SyncOnCreate", true);
-    Config.SyncOnSave = sConfigMgr->GetOption<bool>("AccountBound.Titles.SyncOnSave", true);
-    Config.SyncRealmFirst = sConfigMgr->GetOption<bool>("AccountBound.Titles.SyncRealmFirst", false);
-    Config.ConvertFactionSpecific = sConfigMgr->GetOption<bool>("AccountBound.Titles.ConvertFactionSpecific", true);
+    Config.StartupBackfill = sConfigMgr->GetOption<bool>("AccountBound.Titles.StartupBackfill", true, false);
+    Config.SyncOnCreate = sConfigMgr->GetOption<bool>("AccountBound.Titles.SyncOnCreate", true, false);
+    Config.SyncOnSave = sConfigMgr->GetOption<bool>("AccountBound.Titles.SyncOnSave", true, false);
+    Config.SyncRealmFirst = sConfigMgr->GetOption<bool>("AccountBound.Titles.SyncRealmFirst", false, false);
+    Config.ConvertFactionSpecific = sConfigMgr->GetOption<bool>("AccountBound.Titles.ConvertFactionSpecific", true, false);
     Config.Filter = AccountBound::LoadIdFilter("Titles");
 }
 }

@@ -313,10 +313,10 @@ void BackfillAllAccounts()
 void LoadModuleConfig()
 {
     Config.Enabled = AccountBound::IsCategoryEnabled("Friends");
-    Config.SyncOnCreate = sConfigMgr->GetOption<bool>("AccountBound.Friends.SyncOnCreate", true);
-    Config.SyncOnLogin = sConfigMgr->GetOption<bool>("AccountBound.Friends.SyncOnLogin", true);
-    Config.StartupBackfill = sConfigMgr->GetOption<bool>("AccountBound.Friends.StartupBackfill", true);
-    Config.SameFactionOnly = sConfigMgr->GetOption<bool>("AccountBound.Friends.SameFactionOnly", false);
+    Config.SyncOnCreate = sConfigMgr->GetOption<bool>("AccountBound.Friends.SyncOnCreate", true, false);
+    Config.SyncOnLogin = sConfigMgr->GetOption<bool>("AccountBound.Friends.SyncOnLogin", true, false);
+    Config.StartupBackfill = sConfigMgr->GetOption<bool>("AccountBound.Friends.StartupBackfill", true, false);
+    Config.SameFactionOnly = sConfigMgr->GetOption<bool>("AccountBound.Friends.SameFactionOnly", false, false);
 }
 }
 

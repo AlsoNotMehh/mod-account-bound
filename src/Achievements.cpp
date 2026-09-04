@@ -314,13 +314,13 @@ void BackfillAllAchievements()
 void LoadModuleConfig()
 {
     Config.Enabled = AccountBound::IsCategoryEnabled("Achievements");
-    Config.StartupBackfill = sConfigMgr->GetOption<bool>("AccountBound.Achievements.StartupBackfill", true);
-    Config.SameFactionOnly = sConfigMgr->GetOption<bool>("AccountBound.Achievements.SameFactionOnly", false);
-    Config.SyncOnCreate = sConfigMgr->GetOption<bool>("AccountBound.Achievements.SyncOnCreate", true);
-    Config.SyncRealmFirst = sConfigMgr->GetOption<bool>("AccountBound.Achievements.SyncRealmFirst", false);
-    Config.SyncHidden = sConfigMgr->GetOption<bool>("AccountBound.Achievements.SyncHidden", false);
-    Config.ConvertFactionSpecific = sConfigMgr->GetOption<bool>("AccountBound.Achievements.ConvertFactionSpecific", true);
-    Config.SyncUnpairedFactionSpecific = sConfigMgr->GetOption<bool>("AccountBound.Achievements.SyncUnpairedFactionSpecific", false);
+    Config.StartupBackfill = sConfigMgr->GetOption<bool>("AccountBound.Achievements.StartupBackfill", true, false);
+    Config.SameFactionOnly = sConfigMgr->GetOption<bool>("AccountBound.Achievements.SameFactionOnly", false, false);
+    Config.SyncOnCreate = sConfigMgr->GetOption<bool>("AccountBound.Achievements.SyncOnCreate", true, false);
+    Config.SyncRealmFirst = sConfigMgr->GetOption<bool>("AccountBound.Achievements.SyncRealmFirst", false, false);
+    Config.SyncHidden = sConfigMgr->GetOption<bool>("AccountBound.Achievements.SyncHidden", false, false);
+    Config.ConvertFactionSpecific = sConfigMgr->GetOption<bool>("AccountBound.Achievements.ConvertFactionSpecific", true, false);
+    Config.SyncUnpairedFactionSpecific = sConfigMgr->GetOption<bool>("AccountBound.Achievements.SyncUnpairedFactionSpecific", false, false);
     Config.Filter = AccountBound::LoadIdFilter("Achievements");
 }
 }

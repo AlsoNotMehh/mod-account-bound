@@ -612,16 +612,16 @@ void CleanupInvalidMounts()
 void LoadModuleConfig()
 {
     Config.Enabled = AccountBound::IsCategoryEnabled("Mounts");
-    Config.StartupBackfill = sConfigMgr->GetOption<bool>("AccountBound.Mounts.StartupBackfill", true);
-    Config.SyncOnCreate = sConfigMgr->GetOption<bool>("AccountBound.Mounts.SyncOnCreate", true);
-    Config.ConvertFactionSpecific = sConfigMgr->GetOption<bool>("AccountBound.Mounts.ConvertFactionSpecific", true);
-    Config.RespectFactionRestrictions = sConfigMgr->GetOption<bool>("AccountBound.Mounts.RespectFactionRestrictions", true);
-    Config.RequireRiding = sConfigMgr->GetOption<bool>("AccountBound.Mounts.RequireRiding", true);
-    Config.SyncClassMounts = sConfigMgr->GetOption<bool>("AccountBound.Mounts.SyncClassMounts", true);
-    Config.RequireClass = sConfigMgr->GetOption<bool>("AccountBound.Mounts.RequireClass", true);
-    Config.ClassMountsSameFactionOnly = sConfigMgr->GetOption<bool>("AccountBound.Mounts.ClassMountsSameFactionOnly", true);
-    Config.CleanupInvalid = sConfigMgr->GetOption<bool>("AccountBound.Mounts.CleanupInvalid", true);
-    Config.BackfillOnRidingSkillChange = sConfigMgr->GetOption<bool>("AccountBound.Mounts.BackfillOnRidingSkillChange", true);
+    Config.StartupBackfill = sConfigMgr->GetOption<bool>("AccountBound.Mounts.StartupBackfill", true, false);
+    Config.SyncOnCreate = sConfigMgr->GetOption<bool>("AccountBound.Mounts.SyncOnCreate", true, false);
+    Config.ConvertFactionSpecific = sConfigMgr->GetOption<bool>("AccountBound.Mounts.ConvertFactionSpecific", true, false);
+    Config.RespectFactionRestrictions = sConfigMgr->GetOption<bool>("AccountBound.Mounts.RespectFactionRestrictions", true, false);
+    Config.RequireRiding = sConfigMgr->GetOption<bool>("AccountBound.Mounts.RequireRiding", true, false);
+    Config.SyncClassMounts = sConfigMgr->GetOption<bool>("AccountBound.Mounts.SyncClassMounts", true, false);
+    Config.RequireClass = sConfigMgr->GetOption<bool>("AccountBound.Mounts.RequireClass", true, false);
+    Config.ClassMountsSameFactionOnly = sConfigMgr->GetOption<bool>("AccountBound.Mounts.ClassMountsSameFactionOnly", true, false);
+    Config.CleanupInvalid = sConfigMgr->GetOption<bool>("AccountBound.Mounts.CleanupInvalid", true, false);
+    Config.BackfillOnRidingSkillChange = sConfigMgr->GetOption<bool>("AccountBound.Mounts.BackfillOnRidingSkillChange", true, false);
     Config.Filter = AccountBound::LoadIdFilter("Mounts");
 }
 }
